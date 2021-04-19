@@ -3,7 +3,9 @@ import socket from '../socket';
 
 export default function Chat({userName}) {
   let [userList, setUserList] = useState([]);
-  const [dummy, setDummy] = useState('');
+  // Get the room name from querystring
+  // const [room, setRoom] = useState([]);
+  // const [dummy, setDummy] = useState('');
 
   const initReactiveProperties = (user) => {
     user.connected = true;
@@ -12,6 +14,7 @@ export default function Chat({userName}) {
   }
 
   useEffect(() => {
+    console.log('The useEffect');
     socket.on("connect", () => {
       userList.forEach((user) => {
         if (user.self) {
@@ -39,39 +42,47 @@ export default function Chat({userName}) {
 
     socket.on('user connected', function (user) {
       initReactiveProperties(user);
-      console.log('User connected', user.username);
+      console.log('User connected', user.username, 'into', user.room);
       console.log('Userlist now: ', userList);
 
-      // setUserList([...userList]);
-      setDummy('newDummy');
+      setUserList([...userList, user]);
+      // setDummy('newDummy');
     });
 
     socket.on('user disconnected', (id) => {
-      for(let i = 0; i < userList.length; i++) {
-        const user = userList[i];
-        if(user.userID === id) {
-          user.connected = false;
-          break;
-        }
+      const cpyArr = [...userList];
+      const foundUser = cpyArr.findIndex((item) => item.userID === id);
+      if(foundUser !== -1) {
+        cpyArr.splice(foundUser, 1);
+        setUserList(cpyArr);
+      } else {
+        console.log('user not found');
       }
     });
     // Clean up listeners
     return () => {
+      console.log('The return');
       socket.off('connect');
       socket.off('disconnect');
       socket.off('users');
       socket.off('user connected');
       socket.off('user disconnected');
     }
-  }, []);
+  }, [userList]);
 
-  useEffect(() => {
-    console.log('Users: ', userList);
-  }, [userList, dummy])
+  // useEffect(() => {
+  //   console.log('Users: ', userList);
+  // }, [userList])
 
   return (
     <div>
       <h1>Hello {userName}</h1>
+      <div className="userList">
+        {userList.map((user, index) => {
+          if(user.connected) return <div key={index}>{user.username}</div>
+          else return null
+        })}
+      </div>
     </div>
   )
 }
