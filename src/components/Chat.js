@@ -2,19 +2,13 @@ import React, { useState, useEffect } from 'react';
 import socket from '../socket';
 
 export default function Chat({userName}) {
-  let [userList, setUserList] = useState([]);
-  // Get the room name from querystring
-  // const [room, setRoom] = useState([]);
-  // const [dummy, setDummy] = useState('');
+  const [userList, setUserList] = useState([]);
+  const [messages, setMessages] = useState([{user: 'john', content: 'Hello dude'}, {user: 'hallur', content: 'heyo'}]);
+  const [message, setMessage] = useState('');
 
-  const initReactiveProperties = (user) => {
-    user.connected = true;
-    user.messages = [];
-    user.hasNewMessages = false;
-  }
+  /* Add use effect here to set the 'get message' event listener */
 
   useEffect(() => {
-    console.log('The useEffect');
     socket.on("connect", () => {
       userList.forEach((user) => {
         if (user.self) {
@@ -30,23 +24,15 @@ export default function Chat({userName}) {
         }
       });
     });
+
     // Only sent to each instance once, upon connection
     socket.on('users', (users) => {
-      console.log('Incoming users: ', users);
-      users.forEach((user) => {
-        user.self = user.userID === socket.id;
-        initReactiveProperties(user);
-      });
       setUserList(users);
     });
 
+    // Sent to everyone besides the connecting user
     socket.on('user connected', function (user) {
-      initReactiveProperties(user);
-      console.log('User connected', user.username, 'into', user.room);
-      console.log('Userlist now: ', userList);
-
       setUserList([...userList, user]);
-      // setDummy('newDummy');
     });
 
     socket.on('user disconnected', (id) => {
@@ -61,7 +47,6 @@ export default function Chat({userName}) {
     });
     // Clean up listeners
     return () => {
-      console.log('The return');
       socket.off('connect');
       socket.off('disconnect');
       socket.off('users');
@@ -70,18 +55,23 @@ export default function Chat({userName}) {
     }
   }, [userList]);
 
-  // useEffect(() => {
-  //   console.log('Users: ', userList);
-  // }, [userList])
+  /* Implement this function, should emit an event that the server is listening to */
+  const sendMessage = () => {
+    console.log('Send this message: ', message);
+  };
 
   return (
-    <div>
-      <h1>Hello {userName}</h1>
+    <div className="chatPage">
+      <h1>ChatApp</h1>
+      <div className="chatWindow">
+        <div className="chatMessages">
+          {messages.map((msg, index) => <div key={index}>{msg.user}: {msg.content}</div>)}
+        </div>
+        <input type="text" className="chatInput" placeholder="Enter message" value={message} onChange={(ev) => setMessage(ev.target.value)} onKeyPress={(ev) => ev.key === 'Enter' ? sendMessage(ev) : null}/>
+      </div>
       <div className="userList">
-        {userList.map((user, index) => {
-          if(user.connected) return <div key={index}>{user.username}</div>
-          else return null
-        })}
+        <h2>Users</h2>
+        {userList.map((user, index) => <div key={index}>{user.username}</div>)}
       </div>
     </div>
   )

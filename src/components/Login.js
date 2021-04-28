@@ -12,7 +12,8 @@ export default function Login({finishLogin}) {
   };
 
   return (
-    <div>
+    <div className="loginPage">
+      <h1>ChatApp</h1>
       <input type="text" onChange={(ev) => setUsername(ev.target.value)} placeholder="Username..." />
       <button type="button" onClick={() => handleLogin()}>Login</button>
     </div>

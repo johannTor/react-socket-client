@@ -30,7 +30,6 @@ function App() {
 
   return (
     <div className="App">
-      <h1>ChatApp</h1>
       {!isLoggedIn ? <Login finishLogin={finishLogin}/> : <Chat userName={userName}/>}
     </div>
   );
